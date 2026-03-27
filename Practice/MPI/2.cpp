@@ -39,23 +39,23 @@ int main() {
     std::mt19937 rng(std::random_device{}() + rank);
     std::uniform_int_distribution<int> dist(0, 100);
     myNumber = dist(rng);
-    std::cout << rank << "'s number is " << myNumber << '\n';
+    std::cout << rank << "'s number is " << myNumber << std::endl;
 
     if (rank == 0) {
         MPI_Send(&myNumber, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
         MPI_Recv(&otherNumber, 1, MPI_INT, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        std::cout << rank << " knows that max is " << otherNumber << '\n';
+        std::cout << rank << " knows that max is " << otherNumber << std::endl;
     } else if (rank == worldSize - 1) {
         MPI_Recv(&otherNumber, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         if (myNumber > otherNumber) otherNumber = myNumber;
-        std::cout << rank << " knows that max is " << otherNumber << '\n';
+        std::cout << rank << " knows that max is " << otherNumber << std::endl;
         MPI_Send(&otherNumber, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD);
     } else {
         MPI_Recv(&otherNumber, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         if (myNumber > otherNumber) otherNumber = myNumber;
         MPI_Send(&otherNumber, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
         MPI_Recv(&otherNumber, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        std::cout << rank << " knows that max is " << otherNumber << '\n';
+        std::cout << rank << " knows that max is " << otherNumber << std::endl;
         MPI_Send(&otherNumber, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD);
     }
 

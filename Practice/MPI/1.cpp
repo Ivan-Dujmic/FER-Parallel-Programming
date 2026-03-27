@@ -39,7 +39,7 @@ int main() {
     std::mt19937 rng(std::random_device{}() + rank);
     std::uniform_real_distribution<double> dist(0.0, 10.0);
     double myNumber = dist(rng);
-    std::cout << rank << "'s number is " << myNumber << '\n';
+    std::cout << rank << "'s number is " << myNumber << std::endl;
 
     double nbNum1;
     double nbNum2;
@@ -60,7 +60,7 @@ int main() {
     }
 
     double avg = (myNumber + nbNum1 + nbNum2) / 3;
-    std::cout << rank << "'s avg is " << avg << '\n';
+    std::cout << rank << "'s avg is " << avg << std::endl;
 
     MPI_Finalize();
     return 0;
