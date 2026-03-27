@@ -1,21 +1,19 @@
 /*
-Korištenjem MPI funkcija Send i Recv (skraćena sintaksa)
+Korištenjem MPI funkcija Send i Recv
 napišite niz instrukcija koji će sve elemente zadane kružne liste
 postaviti na srednju vrijednost toga i dvaju susjednih elemenata
 (indeksi i, i+1, i-1; posljednji element povezan je s prvim i obrnuto).
 Svaki MPI proces ima u lokalnoj memoriji samo jedan element liste koji je realna vrijednost.
-Broj procesa je N, svaki proces ima redni broj ID.
 Program treba jamčiti ispravnost rada bez obzira na veličinu poruka
 (ne smije doći do potpunog zastoja zbog redoslijeda slanja i primanja)!
 */
 
 /*
-Using MPI functions Send and Recv (shortened syntax),
+Using MPI functions Send and Recv,
 write a sequence of instructions that will set every element of a given circular list
 to the average value of itself and its two neighboring elements
 (indices i, i+1, i−1; the last element is connected to the first and vice versa).
 Each MPI process has only one element of the list in its local memory, which is a real (floating-point) value.
-The number of processes is N, and each process has an identifier ID.
 The program must guarantee correct execution regardless of message size
 (i.e., it must not result in a deadlock due to the ordering of send and receive operations).
 */
