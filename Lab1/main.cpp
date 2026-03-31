@@ -54,11 +54,11 @@ int main() {
                     MPI_Recv(&forkRequest, 1, MPI_CHAR, sender, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     if (forkRequest == forkLeft) {
                         std::cout << indent << "Give left" << std::endl;
-                        MPI_Send(&forkRight, 1, MPI_CHAR, sender, 0, MPI_COMM_WORLD);
+                        MPI_Send(&forkRight, 1, MPI_CHAR, rankLeft, 0, MPI_COMM_WORLD);
                         hasLeft = false;
                     } else {
                         std::cout << indent << "Give right" << std::endl;
-                        MPI_Send(&forkLeft, 1, MPI_CHAR, sender, 0, MPI_COMM_WORLD);
+                        MPI_Send(&forkLeft, 1, MPI_CHAR, rankRight, 0, MPI_COMM_WORLD);
                         hasRight = false;
                     }
                 } else {
@@ -78,44 +78,40 @@ int main() {
         }
 
         while (!hasLeft || !hasRight) {
-            MPI_Iprobe(MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &flag, &status);
-            if (flag) {
-                int sender = status.MPI_SOURCE;
-                MPI_Recv(&forkRequest, 1, MPI_CHAR, sender, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                if (forkRequest == forkLeft) {
-                    if (hasLeft) {
-                        if (leftDirty) {
-                            std::cout << indent << "Give left" << std::endl;
-                            MPI_Send(&forkRight, 1, MPI_CHAR, rankLeft, 0, MPI_COMM_WORLD);
-                            hasLeft = false;
-                            std::cout << indent << "Needs left" << std::endl;
-                            MPI_Send(&forkRight, 1, MPI_CHAR, rankLeft, 0, MPI_COMM_WORLD);
-                        } else {
-                            std::cout << indent << "Left wants" << std::endl;
-                            requestLeft = true;
-                        }
+            MPI_Recv(&forkRequest, 1, MPI_CHAR, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+            if (forkRequest == forkLeft) {
+                if (hasLeft) {
+                    if (leftDirty) {
+                        std::cout << indent << "Give left" << std::endl;
+                        MPI_Send(&forkRight, 1, MPI_CHAR, rankLeft, 0, MPI_COMM_WORLD);
+                        hasLeft = false;
+                        std::cout << indent << "Needs left" << std::endl;
+                        MPI_Send(&forkRight, 1, MPI_CHAR, rankLeft, 0, MPI_COMM_WORLD);
                     } else {
-                        std::cout << indent << "Left received" << std::endl;
-                        hasLeft = true;
-                        leftDirty = false;
+                        std::cout << indent << "Left wants" << std::endl;
+                        requestLeft = true;
                     }
                 } else {
-                    if (hasRight) {
-                        if (rightDirty) {
-                            std::cout << indent << "Give right" << std::endl;
-                            MPI_Send(&forkLeft, 1, MPI_CHAR, rankRight, 0, MPI_COMM_WORLD);
-                            hasRight = false;
-                            std::cout << indent << "Needs Right" << std::endl;
-                            MPI_Send(&forkLeft, 1, MPI_CHAR, rankRight, 0, MPI_COMM_WORLD);
-                        } else {
-                            std::cout << indent << "Right wants" << std::endl;
-                            requestRight = true;
-                        }
+                    std::cout << indent << "Left received" << std::endl;
+                    hasLeft = true;
+                    leftDirty = false;
+                }
+            } else {
+                if (hasRight) {
+                    if (rightDirty) {
+                        std::cout << indent << "Give right" << std::endl;
+                        MPI_Send(&forkLeft, 1, MPI_CHAR, rankRight, 0, MPI_COMM_WORLD);
+                        hasRight = false;
+                        std::cout << indent << "Needs Right" << std::endl;
+                        MPI_Send(&forkLeft, 1, MPI_CHAR, rankRight, 0, MPI_COMM_WORLD);
                     } else {
-                        std::cout << indent << "Right received" << std::endl;
-                        hasRight = true;
-                        rightDirty = false;
+                        std::cout << indent << "Right wants" << std::endl;
+                        requestRight = true;
                     }
+                } else {
+                    std::cout << indent << "Right received" << std::endl;
+                    hasRight = true;
+                    rightDirty = false;
                 }
             }
         }
