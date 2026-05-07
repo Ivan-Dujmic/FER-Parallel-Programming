@@ -25,6 +25,9 @@ public:
     
     friend std::ostream& operator<<(std::ostream&, const Board&);
 
+    std::size_t get_width() const;
+    std::size_t get_height() const;
+
     MoveResult place(std::size_t col, bool player_move);
     bool remove(std::size_t col);
 };

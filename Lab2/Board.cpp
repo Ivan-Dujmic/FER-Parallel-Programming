@@ -1,5 +1,15 @@
 #include "Board.h"
 
+Board::Board(std::size_t width, std::size_t height, char symbol_empty, char symbol_player, char symbol_comp) : 
+    width(width),
+    height(height),
+    spots(width, std::vector<char>(height, symbol_empty)),
+    heights(width, 0),
+    symbol_empty(symbol_empty),
+    symbol_player(symbol_player),
+    symbol_comp(symbol_comp)
+{}
+
 std::ostream& operator<<(std::ostream& os, const Board& b) {
     for (std::size_t i = b.height ; i > 0 ; i--) {
         for (std::size_t j = 0 ; j < b.width ; j++) {
@@ -15,20 +25,19 @@ std::ostream& operator<<(std::ostream& os, const Board& b) {
     return os;
 }
 
-Board::Board(std::size_t width, std::size_t height, char symbol_empty, char symbol_player, char symbol_comp) : 
-    width(width),
-    height(height),
-    spots(width, std::vector<char>(height, symbol_empty)),
-    symbol_empty(symbol_empty),
-    symbol_player(symbol_player),
-    symbol_comp(symbol_comp)
-{}
+std::size_t Board::get_width() const {
+    return width;
+}
+
+std::size_t Board::get_height() const {
+    return height;
+}
 
 MoveResult Board::place(std::size_t col, bool player_move) {
     if (heights[col] >= height || col >= width) return MoveResult::Invalid;
-
+    
     char symbol = (player_move ? symbol_player : symbol_comp);
-
+    
     // Place
     std::size_t row = heights[col];
     spots[col][row] = symbol;

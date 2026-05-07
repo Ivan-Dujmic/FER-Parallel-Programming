@@ -19,15 +19,28 @@ int main() {
     Board board(width, height);
     Comp comp(depth);
 
-    int col;
+    std::size_t col;
+    MoveResult move_result;
+
     while (true) {
         std::cout << board;
-        std::cin >> col;
-        if (board.place(col, true) == MoveResult::Win) std::cout << "player wins\n";
-        std::cout << board;
-        std::cin >> col;
-        if (board.place(col, false) == MoveResult::Win) std::cout << "comp wins\n";
-    }
+        do {
+            std::cout << "Your move: ";
+            std::cin >> col;
+            move_result = board.place(col, true);
+        } while (move_result == MoveResult::Invalid);
 
-    return 0;
+        
+        std::cout << board;
+
+        if (move_result == MoveResult::Win) {
+            std::cout << "Player wins!\n";
+            return 0;
+        }
+        
+        if (comp.move(board)) {
+            std::cout << board << "Computer wins!\n";
+            return 0;
+        }
+    }
 }
