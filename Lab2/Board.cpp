@@ -54,7 +54,7 @@ MoveResult Board::place(std::size_t col, bool player_move) {
         count++;
         if (count == 3) return MoveResult::Win;
     }
-    for (std::size_t i = col + 1 ; i < width - 1 ; i++) {
+    for (std::size_t i = col + 1 ; i < width ; i++) {
         if (spots[i][row] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
@@ -67,7 +67,7 @@ MoveResult Board::place(std::size_t col, bool player_move) {
         count++;
         if (count == 3) return MoveResult::Win;
     }
-    for (std::size_t i = row + 1 ; i < height - 1 ; i++) {
+    for (std::size_t i = row + 1 ; i < height ; i++) {
         if (spots[col][i] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
@@ -75,12 +75,12 @@ MoveResult Board::place(std::size_t col, bool player_move) {
 
     // Ascending diagonal
     count = 0;
-    for (std::size_t i = col, j = row ; i > 0 and j > 0 ; i--, j--) {
+    for (std::size_t i = col, j = row ; i > 0 && j > 0 ; i--, j--) {
         if (spots[i - 1][j - 1] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
-    for (std::size_t i = col + 1, j = row + 1 ; i < width - 1 and j < height; i++, j++) {
+    for (std::size_t i = col + 1, j = row + 1 ; i < width && j < height; i++, j++) {
         if (spots[i][j] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
@@ -88,12 +88,12 @@ MoveResult Board::place(std::size_t col, bool player_move) {
 
     // Descending diagonal
     count = 0;
-    for (std::size_t i = col, j = row + 1 ; i > 0 and j < height ; i--, j++) {
+    for (std::size_t i = col, j = row + 1 ; i > 0 && j < height ; i--, j++) {
         if (spots[i - 1][j] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
-    for (std::size_t i = col + 1, j = row ; i < width - 1 and j > 0; i++, j--) {
+    for (std::size_t i = col + 1, j = row ; i < width && j > 0; i++, j--) {
         if (spots[i][j - 1] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
