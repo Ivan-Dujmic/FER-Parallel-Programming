@@ -1,13 +1,10 @@
 #include <cstddef>
 #include <iostream>
-// #include <mpi.h>
-// #include <random>
-// #include <unistd.h>
 
 #include "Board.h"
 #include "Comp.h"
 
-int main() {
+int main(int argc, char* argv[]) {
     std::size_t width, height, depth, minimax_levels;
     std::cout << "Board width: ";
     std::cin >> width;

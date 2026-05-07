@@ -17,6 +17,8 @@ double Comp::move_recursive(Board& board, std::size_t depth) {
     bool played = false;
     
     if (max_depth - depth < minimax_levels) { // Assume all optimal moves (minimax)
+        // No need to use the approximately_equal for doubles in the minimax part as we are always working with the exact three values
+        
         double best_move = (player_move ? 1 : -1); // Initial best is worst
         for (std::size_t i = 0 ; i < width ; i++) {
             move_result = board.place(i, player_move);
