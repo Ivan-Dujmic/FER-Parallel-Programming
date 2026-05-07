@@ -22,13 +22,14 @@ friend std::ostream& operator<<(std::ostream&, const Board&);
 
 private:
     char spots[WIDTH][HEIGHT];
-    std::size_t heights[WIDTH];
+    std::size_t heights[WIDTH]; // Column heights
     
 public:
     Board() {
         for (std::size_t i = 0 ; i < WIDTH ; i++) {
             heights[i] = 0;
 
+            // Fill with symbol for empty spot
             for (std::size_t j = 0 ; j < HEIGHT ; j++) {
                 spots[i][j] = SYMBOL_EMPTY;
             }
@@ -36,7 +37,7 @@ public:
     }
 
     MoveResult place(std::size_t col, bool player_move) {
-        if (heights[col] >= HEIGHT) return MoveResult::Invalid;
+        if (heights[col] >= HEIGHT || col >= WIDTH) return MoveResult::Invalid;
 
         char symbol = (player_move ? SYMBOL_PLAYER : SYMBOL_COM);
 
@@ -49,11 +50,11 @@ public:
         // Horizontal
         count = 0;
         for (std::size_t i = col ; i > 0 ; i--) {
-            if (spots[i][row] != symbol) break;
+            if (spots[i - 1][row] != symbol) break;
             count++;
             if (count == 3) return MoveResult::Win;
         }
-        for (std::size_t i = col ; i < WIDTH - 1 ; i++) {
+        for (std::size_t i = col + 1 ; i < WIDTH - 1 ; i++) {
             if (spots[i][row] != symbol) break;
             count++;
             if (count == 3) return MoveResult::Win;
@@ -62,11 +63,11 @@ public:
         // Vertical
         count = 0;
         for (std::size_t i = row ; i > 0 ; i--) {
-            if (spots[col][i] != symbol) break;
+            if (spots[col][i - 1] != symbol) break;
             count++;
             if (count == 3) return MoveResult::Win;
         }
-        for (std::size_t i = row ; i < HEIGHT - 1 ; i++) {
+        for (std::size_t i = row + 1 ; i < HEIGHT - 1 ; i++) {
             if (spots[col][i] != symbol) break;
             count++;
             if (count == 3) return MoveResult::Win;
@@ -75,11 +76,11 @@ public:
         // Ascending diagonal
         count = 0;
         for (std::size_t i = col, j = row ; i > 0 and j > 0 ; i--, j--) {
-            if (spots[i][j] != symbol) break;
+            if (spots[i - 1][j - 1] != symbol) break;
             count++;
             if (count == 3) return MoveResult::Win;
         }
-        for (std::size_t i = col, j = row ; i < WIDTH - 1 and j < HEIGHT; i++, j++) {
+        for (std::size_t i = col + 1, j = row + 1 ; i < WIDTH - 1 and j < HEIGHT; i++, j++) {
             if (spots[i][j] != symbol) break;
             count++;
             if (count == 3) return MoveResult::Win;
@@ -87,13 +88,13 @@ public:
 
         // Descending diagonal
         count = 0;
-        for (std::size_t i = col, j = row ; i > 0 and j < HEIGHT ; i--, j++) {
-            if (spots[i][j] != symbol) break;
+        for (std::size_t i = col, j = row + 1 ; i > 0 and j < HEIGHT ; i--, j++) {
+            if (spots[i - 1][j] != symbol) break;
             count++;
             if (count == 3) return MoveResult::Win;
         }
-        for (std::size_t i = col, j = row ; i < WIDTH - 1 and j > 0; i++, j--) {
-            if (spots[i][j] != symbol) break;
+        for (std::size_t i = col + 1, j = row ; i < WIDTH - 1 and j > 0; i++, j--) {
+            if (spots[i][j - 1] != symbol) break;
             count++;
             if (count == 3) return MoveResult::Win;
         }
@@ -132,10 +133,10 @@ int main() {
     while (true) {
         std::cout << board;
         std::cin >> col;
-        board.place(col, true);
+        if (board.place(col, true) == MoveResult::Win) std::cout << "player wins\n";
         std::cout << board;
         std::cin >> col;
-        board.place(col, true);
+        if (board.place(col, false) == MoveResult::Win) std::cout << "comp wins\n";
     }
 
     return 0;
