@@ -8,16 +8,18 @@
 #include "Comp.h"
 
 int main() {
-    std::size_t width, height, depth;
+    std::size_t width, height, depth, minimax_levels;
     std::cout << "Board width: ";
     std::cin >> width;
     std::cout << "Board height: ";
     std::cin >> height;
     std::cout << "Search depth: ";
     std::cin >> depth;
+    std::cout << "Minimax levels: ";
+    std::cin >> minimax_levels;
 
     Board board(width, height);
-    Comp comp(depth);
+    Comp comp(depth, minimax_levels);
 
     std::size_t col;
     MoveResult move_result;
