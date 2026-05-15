@@ -45,7 +45,7 @@ MoveResult Board::place(std::size_t col, bool player_move) {
     
     // Place
     std::size_t row = heights[col];
-    spots[col * width + row] = symbol;
+    spots[col * height + row] = symbol;
     heights[col]++;
 
     std::size_t count;
@@ -55,12 +55,12 @@ MoveResult Board::place(std::size_t col, bool player_move) {
     // Horizontal
     count = 0;
     for (std::size_t i = col ; i > 0 ; i--) {
-        if (spots[(i - 1) + width + row] != symbol) break;
+        if (spots[(i - 1) * height + row] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
     for (std::size_t i = col + 1 ; i < width ; i++) {
-        if (spots[i * width + row] != symbol) break;
+        if (spots[i * height + row] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
@@ -68,12 +68,12 @@ MoveResult Board::place(std::size_t col, bool player_move) {
     // Vertical
     count = 0;
     for (std::size_t i = row ; i > 0 ; i--) {
-        if (spots[col * width + i - 1] != symbol) break;
+        if (spots[col * height + i - 1] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
     for (std::size_t i = row + 1 ; i < height ; i++) {
-        if (spots[col * width + i] != symbol) break;
+        if (spots[col * height + i] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
@@ -81,12 +81,12 @@ MoveResult Board::place(std::size_t col, bool player_move) {
     // Ascending diagonal
     count = 0;
     for (std::size_t i = col, j = row ; i > 0 && j > 0 ; i--, j--) {
-        if (spots[(i - 1) * width + j - 1] != symbol) break;
+        if (spots[(i - 1) * height + j - 1] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
     for (std::size_t i = col + 1, j = row + 1 ; i < width && j < height; i++, j++) {
-        if (spots[i * width + j] != symbol) break;
+        if (spots[i * height + j] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
@@ -94,12 +94,12 @@ MoveResult Board::place(std::size_t col, bool player_move) {
     // Descending diagonal
     count = 0;
     for (std::size_t i = col, j = row + 1 ; i > 0 && j < height ; i--, j++) {
-        if (spots[(i - 1) * width + j] != symbol) break;
+        if (spots[(i - 1) * height + j] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
     for (std::size_t i = col + 1, j = row ; i < width && j > 0; i++, j--) {
-        if (spots[i * width + j - 1] != symbol) break;
+        if (spots[i * height + j - 1] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
@@ -110,7 +110,7 @@ MoveResult Board::place(std::size_t col, bool player_move) {
 bool Board::remove(std::size_t col) {
     std::size_t row = heights[col] - 1;
     if (col >= width || row >= height) return false;
-    spots[col * width + row] = symbol_empty;
+    spots[col * height + row] = symbol_empty;
     heights[col]--;
     return true;
 }

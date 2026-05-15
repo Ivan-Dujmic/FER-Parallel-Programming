@@ -99,7 +99,3 @@ bool Comp::move(Board &board) {
 
     return board.place(best_move, false) == MoveResult::Win;
 }
-
-bool move_parallel_worker() {
-    
-}
