@@ -3,7 +3,7 @@
 Board::Board(std::size_t width, std::size_t height, char symbol_empty, char symbol_player, char symbol_comp) : 
     width(width),
     height(height),
-    spots(width, std::vector<char>(height, symbol_empty)),
+    spots(width * height, symbol_empty),
     heights(width, 0),
     symbol_empty(symbol_empty),
     symbol_player(symbol_player),
@@ -13,7 +13,7 @@ Board::Board(std::size_t width, std::size_t height, char symbol_empty, char symb
 std::ostream& operator<<(std::ostream& os, const Board& b) {
     for (std::size_t i = b.height ; i > 0 ; i--) {
         for (std::size_t j = 0 ; j < b.width ; j++) {
-            os << ' ' << b.spots[j][i - 1];
+            os << ' ' << b.spots[j * b.height + i - 1];
         }
         os << '\n';
     }
@@ -33,6 +33,11 @@ std::size_t Board::get_height() const {
     return height;
 }
 
+void Board::set_board(const std::vector<char> &&spots, const std::vector<std::size_t> &&heights) {
+    this->spots = std::move(spots);
+    this->heights = std::move(heights);
+}
+
 MoveResult Board::place(std::size_t col, bool player_move) {
     if (heights[col] >= height || col >= width) return MoveResult::Invalid;
     
@@ -40,7 +45,7 @@ MoveResult Board::place(std::size_t col, bool player_move) {
     
     // Place
     std::size_t row = heights[col];
-    spots[col][row] = symbol;
+    spots[col * width + row] = symbol;
     heights[col]++;
 
     std::size_t count;
@@ -50,12 +55,12 @@ MoveResult Board::place(std::size_t col, bool player_move) {
     // Horizontal
     count = 0;
     for (std::size_t i = col ; i > 0 ; i--) {
-        if (spots[i - 1][row] != symbol) break;
+        if (spots[(i - 1) + width + row] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
     for (std::size_t i = col + 1 ; i < width ; i++) {
-        if (spots[i][row] != symbol) break;
+        if (spots[i * width + row] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
@@ -63,12 +68,12 @@ MoveResult Board::place(std::size_t col, bool player_move) {
     // Vertical
     count = 0;
     for (std::size_t i = row ; i > 0 ; i--) {
-        if (spots[col][i - 1] != symbol) break;
+        if (spots[col * width + i - 1] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
     for (std::size_t i = row + 1 ; i < height ; i++) {
-        if (spots[col][i] != symbol) break;
+        if (spots[col * width + i] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
@@ -76,12 +81,12 @@ MoveResult Board::place(std::size_t col, bool player_move) {
     // Ascending diagonal
     count = 0;
     for (std::size_t i = col, j = row ; i > 0 && j > 0 ; i--, j--) {
-        if (spots[i - 1][j - 1] != symbol) break;
+        if (spots[(i - 1) * width + j - 1] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
     for (std::size_t i = col + 1, j = row + 1 ; i < width && j < height; i++, j++) {
-        if (spots[i][j] != symbol) break;
+        if (spots[i * width + j] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
@@ -89,12 +94,12 @@ MoveResult Board::place(std::size_t col, bool player_move) {
     // Descending diagonal
     count = 0;
     for (std::size_t i = col, j = row + 1 ; i > 0 && j < height ; i--, j++) {
-        if (spots[i - 1][j] != symbol) break;
+        if (spots[(i - 1) * width + j] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
     for (std::size_t i = col + 1, j = row ; i < width && j > 0; i++, j--) {
-        if (spots[i][j - 1] != symbol) break;
+        if (spots[i * width + j - 1] != symbol) break;
         count++;
         if (count == 3) return MoveResult::Win;
     }
@@ -105,7 +110,7 @@ MoveResult Board::place(std::size_t col, bool player_move) {
 bool Board::remove(std::size_t col) {
     std::size_t row = heights[col] - 1;
     if (col >= width || row >= height) return false;
-    spots[col][row] = symbol_empty;
+    spots[col * width + row] = symbol_empty;
     heights[col]--;
     return true;
 }
