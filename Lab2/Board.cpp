@@ -1,14 +1,13 @@
 #include "Board.h"
 
 Board::Board(std::size_t width, std::size_t height, char symbol_empty, char symbol_player, char symbol_comp) : 
-    width(width),
-    height(height),
-    spots(width * height, symbol_empty),
-    heights(width, 0),
-    symbol_empty(symbol_empty),
-    symbol_player(symbol_player),
-    symbol_comp(symbol_comp)
-{}
+        width(width),
+        height(height),
+        spots(width * height, symbol_empty),
+        heights(width, 0),
+        symbol_empty(symbol_empty),
+        symbol_player(symbol_player),
+        symbol_comp(symbol_comp) {}
 
 std::ostream& operator<<(std::ostream& os, const Board& b) {
     for (std::size_t i = b.height ; i > 0 ; i--) {

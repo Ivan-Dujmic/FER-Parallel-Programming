@@ -9,15 +9,13 @@ struct Config {
     std::size_t width;
     std::size_t height;
     std::size_t depth;
-    std::size_t minimax_levels;
     std::size_t solo_depth;
 };
 
 enum Tags {
     ASK, // Ask for work
-    TASK, // Task resources
-    RESULT, // Give result
     FINISH // No more work
+    // Task assignments and results are sent with the tag being the task id
 };
 
 int main(int argc, char* argv[]) {
@@ -43,8 +41,6 @@ int main(int argc, char* argv[]) {
         std::cin >> config.height;
         std::cout << "Search depth: ";
         std::cin >> config.depth;
-        std::cout << "Minimax levels: ";
-        std::cin >> config.minimax_levels;
         if (world_size > 1) {
             std::cout << "Solo depth: ";
             std::cin >> config.solo_depth;
@@ -57,7 +53,7 @@ int main(int argc, char* argv[]) {
         }
         
         Board board(config.width, config.height);
-        Comp comp(config.depth, config.minimax_levels);
+        Comp comp(config.depth, config.solo_depth);
         spots.reserve(config.width * config.height);
         heights.reserve(config.width);
         std::size_t col;
@@ -71,6 +67,7 @@ int main(int argc, char* argv[]) {
             move_count++;
             if (move_count == config.width * config.height) {
                 std::cout << "Tied!\n";
+                break;
             }
     
             do {
@@ -92,13 +89,13 @@ int main(int argc, char* argv[]) {
                 break;
             }
             
-            // TODO: Do solo or parallel
-            if (comp.move(board)) {
+            if (world_size > 1 ? comp.move_parallel(board) : comp.move(board)) {
                 std::cout << board << "Computer wins!\n";
                 break;
             }
         }
 
+        // Free the workers
         for (int i = 0 ; i < world_size ; i++) {
             MPI_Send(nullptr, 0, MPI_BYTE, i, Tags::FINISH, MPI_COMM_WORLD);
         }
@@ -106,21 +103,24 @@ int main(int argc, char* argv[]) {
         MPI_Recv(&config, sizeof(config), MPI_BYTE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
         Board board(config.width, config.height);
-        Comp comp(config.depth, config.minimax_levels);
+        Comp comp(config.depth);
         spots.reserve(config.width * config.height);
         heights.reserve(config.width);
         while (true) {
-            MPI_Send(nullptr, 0, MPI_BYTE, 0, Tags::ASK, MPI_COMM_WORLD);
-            MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-            if (status.MPI_TAG == Tags::FINISH) {
+            MPI_Send(nullptr, 0, MPI_BYTE, 0, Tags::ASK, MPI_COMM_WORLD); // Ask for a task
+            MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Wait for the task
+            if (status.MPI_TAG == Tags::FINISH) { // No more tasks
                 MPI_Recv(nullptr, 0, MPI_BYTE, 0, Tags::FINISH, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 break;
             }
-            MPI_Recv(spots.data(), config.width * config.height, MPI_CHAR, 0, Tags::TASK, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Recv(heights.data(), config.width, MPI_BYTE, 0, Tags::TASK, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            // Obtain task resources:
+            MPI_Recv(spots.data(), config.width * config.height, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            int task_id = status.MPI_TAG;
+            MPI_Recv(heights.data(), config.width, MPI_BYTE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             board.set_board(std::move(spots), std::move(heights));
-            double result = comp.move_recursive(board, config.solo_depth + 1);
-            MPI_Send(&result, 1, MPI_DOUBLE, 0, Tags::RESULT, MPI_COMM_WORLD);
+
+            double result = comp.move_recursive(board, config.solo_depth + 1); // Perform task
+            MPI_Send(&result, 1, MPI_DOUBLE, 0, task_id, MPI_COMM_WORLD); // Send result
         }
     }
 
