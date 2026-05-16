@@ -5,3 +5,4 @@
 
 ## Lab2
 - Playing Connect 4 with partial tree state space search
+- Parallelized with a conductor and workers using OpenMPI
