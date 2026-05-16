@@ -16,7 +16,7 @@ private:
     double move_recursive(Board &board, std::size_t depth = 1);
     bool move(Board &board);
 
-    bool save_result_parallel(
+    bool save_result_parallel( // Returns true if we have all the top level results
         int task_id,
         double result,
         std::size_t width,

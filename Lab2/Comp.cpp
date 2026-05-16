@@ -131,8 +131,8 @@ void Comp::move_recursive_parallel(
         } else if (depth != max_depth) {
             if (depth == solo_depth) {
                 MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-                if (status.MPI_TAG == -1) { // If asking for the first task
-                    MPI_Recv(nullptr, 0, MPI_BYTE, status.MPI_SOURCE, -1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                if (status.MPI_TAG == TAG_SPECIAL) { // If asking for the first task
+                    MPI_Recv(nullptr, 0, MPI_BYTE, status.MPI_SOURCE, TAG_SPECIAL, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 } else { // We're getting a result
                     MPI_Recv(&result, 1, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 }
@@ -141,7 +141,7 @@ void Comp::move_recursive_parallel(
                 MPI_Send(board.get_spots_data(), board.get_width() * board.get_height(), MPI_CHAR, status.MPI_SOURCE, i, MPI_COMM_WORLD);
                 MPI_Send(board.get_heights_data(), board.get_width(), MPI_CHAR, status.MPI_SOURCE, i, MPI_COMM_WORLD);
 
-                if (status.MPI_TAG != -1) { // Store result
+                if (status.MPI_TAG != TAG_SPECIAL) { // Store result
                     save_result_parallel(status.MPI_TAG, result, width, buffer_results, buffer_counts);
                 }
             } else {
@@ -178,13 +178,17 @@ bool Comp::move_parallel(Board &board) {
             save_result_parallel(i, 0.0, width, buffer_results, buffer_counts, 0, false);
             continue;
         }
-        else if (move_result == MoveResult::Win) return true; // Instant win
+        else if (move_result == MoveResult::Win) { // Could return true immediately, but would complicate things with the active workers
+            save_result_parallel(i, 1.0, width, buffer_results, buffer_counts, 0);
+            board.remove(i);
+            continue;
+        }
         
         if (max_depth > 0) {
             if (solo_depth == 0) {
                 MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-                if (status.MPI_TAG == -1) { // If asking for the first task
-                    MPI_Recv(nullptr, 0, MPI_BYTE, status.MPI_SOURCE, -1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                if (status.MPI_TAG == TAG_SPECIAL) { // If asking for the first task
+                    MPI_Recv(nullptr, 0, MPI_BYTE, status.MPI_SOURCE, TAG_SPECIAL, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 } else { // We're getting a result
                     MPI_Recv(&result, 1, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 }
@@ -193,7 +197,7 @@ bool Comp::move_parallel(Board &board) {
                 MPI_Send(board.get_spots_data(), board.get_width() * board.get_height(), MPI_CHAR, status.MPI_SOURCE, i, MPI_COMM_WORLD);
                 MPI_Send(board.get_heights_data(), board.get_width(), MPI_CHAR, status.MPI_SOURCE, i, MPI_COMM_WORLD);
 
-                if (status.MPI_TAG != -1) { // Store result
+                if (status.MPI_TAG != TAG_SPECIAL) { // Store result
                     save_result_parallel(status.MPI_TAG, result, width, buffer_results, buffer_counts);
                 }
             } else {
@@ -206,7 +210,7 @@ bool Comp::move_parallel(Board &board) {
 
     while (true) {
         MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-        if (status.MPI_TAG != -1) {
+        if (status.MPI_TAG != TAG_SPECIAL) {
             MPI_Recv(&result, 1, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
             if (save_result_parallel(status.MPI_TAG, result, width, buffer_results, buffer_counts)) {
                 double best_score = -2;

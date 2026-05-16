@@ -90,8 +90,8 @@ int main(int argc, char* argv[]) {
         }
 
         // Free the workers
-        for (int i = 0 ; i < world_size ; i++) {
-            MPI_Send(nullptr, 0, MPI_BYTE, i, -1, MPI_COMM_WORLD);
+        for (int i = 1 ; i < world_size ; i++) {
+            MPI_Send(nullptr, 0, MPI_BYTE, i, TAG_SPECIAL, MPI_COMM_WORLD);
         }
     } else {
         MPI_Recv(&config, sizeof(config), MPI_BYTE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE); // Get config
@@ -101,25 +101,26 @@ int main(int argc, char* argv[]) {
         spots.reserve(config.width * config.height);
         heights.reserve(config.width);
 
-        MPI_Send(nullptr, 0, MPI_BYTE, 0, -1, MPI_COMM_WORLD); // Ask for the first task
         while (true) {
-            MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Wait for a task
-            if (status.MPI_TAG == -1) { // No more tasks
-                MPI_Recv(nullptr, 0, MPI_BYTE, 0, -1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                break;
-            }
-            
-            // Obtain task resources:
-            MPI_Recv(spots.data(), config.width * config.height, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-            int task_id = status.MPI_TAG;
-            MPI_Recv(heights.data(), config.width, MPI_BYTE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            board.set_board(std::move(spots), std::move(heights));
+            MPI_Send(nullptr, 0, MPI_BYTE, 0, TAG_SPECIAL, MPI_COMM_WORLD); // Ask for the first task
+            while (true) {
+                MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Wait for a task
+                if (status.MPI_TAG == TAG_SPECIAL) { // No more tasks
+                    MPI_Recv(nullptr, 0, MPI_BYTE, 0, TAG_SPECIAL, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                    break;
+                }
 
-            double result = comp.move_recursive(board, config.solo_depth + 1); // Perform task
-            MPI_Send(&result, 1, MPI_DOUBLE, 0, task_id, MPI_COMM_WORLD); // Send result
+                // Obtain task resources:
+                MPI_Recv(spots.data(), config.width * config.height, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+                int task_id = status.MPI_TAG;
+                MPI_Recv(heights.data(), config.width, MPI_BYTE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                board.set_board(std::move(spots), std::move(heights));
+
+                double result = comp.move_recursive(board, config.solo_depth + 1); // Perform task
+                MPI_Send(&result, 1, MPI_DOUBLE, 0, task_id, MPI_COMM_WORLD); // Send result
+            }
         }
     }
-
 
     MPI_Finalize();
 
