@@ -27,6 +27,7 @@ private:
     );
     void move_recursive_parallel(
         Board &board,
+        std::size_t task_idx_start,
         std::vector<std::vector<double>> &buffer_results,
         std::vector<std::vector<std::size_t>> &buffer_counts,
         std::size_t depth = 1

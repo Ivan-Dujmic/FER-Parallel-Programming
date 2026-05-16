@@ -136,6 +136,7 @@ int main(int argc, char* argv[]) {
                 board.set_board(spots, heights);
 
                 double result = comp.move_recursive(board, config.solo_depth + 1); // Perform task
+                std::cerr << "Sending result " << task_id << '\n';
                 MPI_Send(&result, 1, MPI_DOUBLE, 0, task_id, MPI_COMM_WORLD); // Send result
             }
         }

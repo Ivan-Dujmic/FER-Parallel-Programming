@@ -107,6 +107,7 @@ bool Comp::save_result_parallel(
 
 void Comp::move_recursive_parallel(
     Board &board,
+    std::size_t task_idx_start,
     std::vector<std::vector<double>> &buffer_results,
     std::vector<std::vector<std::size_t>> &buffer_counts,
     std::size_t depth
@@ -138,14 +139,15 @@ void Comp::move_recursive_parallel(
                 }
 
                 // Send new task:
-                MPI_Send(board.get_spots_data(), board.get_width() * board.get_height(), MPI_CHAR, status.MPI_SOURCE, i, MPI_COMM_WORLD);
-                MPI_Send(board.get_heights_data(), board.get_width() * sizeof(std::size_t), MPI_BYTE, status.MPI_SOURCE, i, MPI_COMM_WORLD);
+                std::cerr << "Sending task " << depth << ' ' << task_idx_start + i << '\n';
+                MPI_Send(board.get_spots_data(), board.get_width() * board.get_height(), MPI_CHAR, status.MPI_SOURCE, task_idx_start + i, MPI_COMM_WORLD);
+                MPI_Send(board.get_heights_data(), board.get_width() * sizeof(std::size_t), MPI_BYTE, status.MPI_SOURCE, task_idx_start + i, MPI_COMM_WORLD);
 
                 if (status.MPI_TAG != TAG_SPECIAL) { // Store result
                     save_result_parallel(status.MPI_TAG, result, width, buffer_results, buffer_counts);
                 }
             } else {
-                move_recursive_parallel(board, buffer_results, buffer_counts, depth + 1);
+                move_recursive_parallel(board, (task_idx_start + i) * width, buffer_results, buffer_counts, depth + 1);
             }
         }
 
@@ -194,6 +196,7 @@ bool Comp::move_parallel(Board &board) {
                 }
 
                 // Send new task:
+                std::cerr << "Sending task " << 0 << ' ' << i << '\n';
                 MPI_Send(board.get_spots_data(), board.get_width() * board.get_height(), MPI_CHAR, status.MPI_SOURCE, i, MPI_COMM_WORLD);
                 MPI_Send(board.get_heights_data(), board.get_width() * sizeof(std::size_t), MPI_BYTE, status.MPI_SOURCE, i, MPI_COMM_WORLD);
 
@@ -201,7 +204,7 @@ bool Comp::move_parallel(Board &board) {
                     save_result_parallel(status.MPI_TAG, result, width, buffer_results, buffer_counts);
                 }
             } else {
-                move_recursive_parallel(board, buffer_results, buffer_counts);
+                move_recursive_parallel(board, i * width, buffer_results, buffer_counts);
             }
         };
 
