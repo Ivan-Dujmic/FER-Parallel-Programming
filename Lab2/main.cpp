@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
             config.solo_depth = -1;
         }
 
-        for (int i = 0 ; i < world_size ; i++) {
+        for (int i = 1 ; i < world_size ; i++) {
             MPI_Send(&config, sizeof(config), MPI_BYTE, i, 0, MPI_COMM_WORLD);
         }
         

@@ -208,9 +208,12 @@ bool Comp::move_parallel(Board &board) {
         board.remove(i);
     }
 
+    // Wait for everyone to finish
     while (true) {
         MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-        if (status.MPI_TAG != TAG_SPECIAL) {
+        if (status.MPI_TAG == TAG_SPECIAL) {
+            MPI_Recv(nullptr, 0, MPI_BYTE, status.MPI_SOURCE, TAG_SPECIAL, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        } else {
             MPI_Recv(&result, 1, MPI_DOUBLE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
             if (save_result_parallel(status.MPI_TAG, result, width, buffer_results, buffer_counts)) {
                 double best_score = -2;
