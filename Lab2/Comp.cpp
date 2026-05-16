@@ -172,11 +172,13 @@ bool Comp::move_parallel(Board &board) {
     }
 
     double result;
+    std::vector<bool> valid_moves(width, true);
 
     for (std::size_t i = 0 ; i < width ; i++) {
         MoveResult move_result = board.place(i, false);
         if (move_result == MoveResult::Invalid) {
             save_result_parallel(i, 0.0, width, buffer_results, buffer_counts, 1, false);
+            valid_moves[i] = false;
             continue;
         }
         else if (move_result == MoveResult::Win) { // Could return true immediately, but would complicate things with the active workers
@@ -221,6 +223,8 @@ bool Comp::move_parallel(Board &board) {
                 std::size_t best_move = -1;
 
                 for (std::size_t i = 0 ; i < width ; i++) {
+                    if (!valid_moves[i]) continue;
+                    
                     double score = buffer_results[1][i];
                     if (score > best_score) {
                         best_score = score;

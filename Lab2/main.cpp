@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <iostream>
 #include <mpi.h>
+#include <chrono>
 
 #include "Utility.h"
 #include "Board.h"
@@ -13,7 +14,10 @@ struct Config {
     std::size_t solo_depth;
 };
 
-int main(int argc, char* argv[]) {
+int main() {
+    using clock = std::chrono::steady_clock;
+    clock::time_point start, end;
+
     MPI_Init(NULL, NULL);
 
     int rank;
@@ -84,7 +88,11 @@ int main(int argc, char* argv[]) {
             }
             
             if (world_size > 1) {
+                start = clock::now();
                 bool is_win = comp.move_parallel(board);
+                end = clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+                std::cout << "Move took: " << duration.count() << "ms\n";
 
                 // Tell the workers that the game is over
                 for (int i = 1 ; i < world_size ; i++) {
@@ -95,9 +103,17 @@ int main(int argc, char* argv[]) {
                     std::cout << board << "Computer wins!\n";
                     break;
                 }
-            } else if (comp.move(board)) {
-                std::cout << board << "Computer wins!\n";
-                break;
+            } else {
+                start = clock::now();
+                bool is_win = comp.move(board);
+                end = clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+                std::cout << "Move took: " << duration.count() << "ms\n";
+
+                if (is_win) {
+                    std::cout << board << "Computer wins!\n";
+                    break;
+                }
             }
         }
 
@@ -123,7 +139,7 @@ int main(int argc, char* argv[]) {
                 if (status.MPI_TAG == TAG_SPECIAL) { // No more tasks
                     MPI_Recv(nullptr, 0, MPI_BYTE, 0, TAG_SPECIAL, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     break;
-                } else if (status.MPI_TAG == TAG_FINISH) {
+                } else if (status.MPI_TAG == TAG_FINISH) { // The game is finished
                     MPI_Recv(nullptr, 0, MPI_BYTE, 0, TAG_FINISH, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     finish = true;
                     break;
