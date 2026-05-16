@@ -78,7 +78,7 @@ bool Comp::save_result_parallel(
     task_id /= width;
 
     if (is_valid) buffer_results[depth][task_id] += 1.0; // We have one more subresult for that node
-    buffer_counts[depth][task_id] += 1; // We've cleared one more child for that node
+    buffer_counts[depth][task_id]++; // We've cleared one more child for that node
 
     if (buffer_counts[0][0] == width) return true;
 
@@ -97,7 +97,7 @@ bool Comp::save_result_parallel(
             task_id /= width;
             
             buffer_results[depth][task_id] += 1.0;
-            buffer_counts[depth][task_id] += 1;
+            buffer_counts[depth][task_id]++;
             if (buffer_counts[0][0] == width) return true; // We have the final result
         } else return false;
     }
@@ -123,12 +123,12 @@ void Comp::move_recursive_parallel(
         move_result = board.place(i, player_move);
 
         if (move_result == MoveResult::Invalid) {
-            save_result_parallel(i, 0.0, width, buffer_results, buffer_counts, depth, false);
+            save_result_parallel(task_idx_start + i, 0.0, width, buffer_results, buffer_counts, depth + 1, false);
             continue;
         }
         
         if (move_result == MoveResult::Win) {
-            save_result_parallel(i , (player_move ? -1.0 : 1.0), width, buffer_results, buffer_counts, depth);
+            save_result_parallel(task_idx_start + i, (player_move ? -1.0 : 1.0), width, buffer_results, buffer_counts, depth + 1);
         } else if (depth != max_depth) {
             if (depth == solo_depth) {
                 MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -139,7 +139,6 @@ void Comp::move_recursive_parallel(
                 }
 
                 // Send new task:
-                std::cerr << "Sending task " << depth << ' ' << task_idx_start + i << '\n';
                 MPI_Send(board.get_spots_data(), board.get_width() * board.get_height(), MPI_CHAR, status.MPI_SOURCE, task_idx_start + i, MPI_COMM_WORLD);
                 MPI_Send(board.get_heights_data(), board.get_width() * sizeof(std::size_t), MPI_BYTE, status.MPI_SOURCE, task_idx_start + i, MPI_COMM_WORLD);
 
@@ -177,11 +176,11 @@ bool Comp::move_parallel(Board &board) {
     for (std::size_t i = 0 ; i < width ; i++) {
         MoveResult move_result = board.place(i, false);
         if (move_result == MoveResult::Invalid) {
-            save_result_parallel(i, 0.0, width, buffer_results, buffer_counts, 0, false);
+            save_result_parallel(i, 0.0, width, buffer_results, buffer_counts, 1, false);
             continue;
         }
         else if (move_result == MoveResult::Win) { // Could return true immediately, but would complicate things with the active workers
-            save_result_parallel(i, 1.0, width, buffer_results, buffer_counts, 0);
+            save_result_parallel(i, 1.0, width, buffer_results, buffer_counts, 1);
             board.remove(i);
             continue;
         }
@@ -196,7 +195,6 @@ bool Comp::move_parallel(Board &board) {
                 }
 
                 // Send new task:
-                std::cerr << "Sending task " << 0 << ' ' << i << '\n';
                 MPI_Send(board.get_spots_data(), board.get_width() * board.get_height(), MPI_CHAR, status.MPI_SOURCE, i, MPI_COMM_WORLD);
                 MPI_Send(board.get_heights_data(), board.get_width() * sizeof(std::size_t), MPI_BYTE, status.MPI_SOURCE, i, MPI_COMM_WORLD);
 
