@@ -139,7 +139,7 @@ void Comp::move_recursive_parallel(
 
                 // Send new task:
                 MPI_Send(board.get_spots_data(), board.get_width() * board.get_height(), MPI_CHAR, status.MPI_SOURCE, i, MPI_COMM_WORLD);
-                MPI_Send(board.get_heights_data(), board.get_width(), MPI_CHAR, status.MPI_SOURCE, i, MPI_COMM_WORLD);
+                MPI_Send(board.get_heights_data(), board.get_width() * sizeof(std::size_t), MPI_BYTE, status.MPI_SOURCE, i, MPI_COMM_WORLD);
 
                 if (status.MPI_TAG != TAG_SPECIAL) { // Store result
                     save_result_parallel(status.MPI_TAG, result, width, buffer_results, buffer_counts);
@@ -195,7 +195,7 @@ bool Comp::move_parallel(Board &board) {
 
                 // Send new task:
                 MPI_Send(board.get_spots_data(), board.get_width() * board.get_height(), MPI_CHAR, status.MPI_SOURCE, i, MPI_COMM_WORLD);
-                MPI_Send(board.get_heights_data(), board.get_width(), MPI_CHAR, status.MPI_SOURCE, i, MPI_COMM_WORLD);
+                MPI_Send(board.get_heights_data(), board.get_width() * sizeof(std::size_t), MPI_BYTE, status.MPI_SOURCE, i, MPI_COMM_WORLD);
 
                 if (status.MPI_TAG != TAG_SPECIAL) { // Store result
                     save_result_parallel(status.MPI_TAG, result, width, buffer_results, buffer_counts);

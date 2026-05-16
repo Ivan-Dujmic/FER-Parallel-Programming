@@ -30,7 +30,7 @@ public:
     std::size_t get_height() const;
     const char * get_spots_data() const;
     const std::size_t * get_heights_data() const;
-    void set_board(const std::vector<char> &&spots, const std::vector<std::size_t> &&heights);
+    void set_board(std::vector<char> spots, std::vector<std::size_t> heights);
 
     MoveResult place(std::size_t col, bool player_move);
     bool remove(std::size_t col);
