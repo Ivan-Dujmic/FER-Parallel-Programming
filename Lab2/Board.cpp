@@ -32,6 +32,14 @@ std::size_t Board::get_height() const {
     return height;
 }
 
+const char * Board::get_spots_data() const {
+    return spots.data();
+}
+
+const std::size_t * Board::get_heights_data() const {
+    return heights.data();
+}
+
 void Board::set_board(const std::vector<char> &&spots, const std::vector<std::size_t> &&heights) {
     this->spots = std::move(spots);
     this->heights = std::move(heights);

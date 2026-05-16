@@ -2,6 +2,7 @@
 #include <iostream>
 #include <mpi.h>
 
+#include "Utility.h"
 #include "Board.h"
 #include "Comp.h"
 
@@ -10,12 +11,6 @@ struct Config {
     std::size_t height;
     std::size_t depth;
     std::size_t solo_depth;
-};
-
-enum Tags {
-    ASK, // Ask for work
-    FINISH // No more work
-    // Task assignments and results are sent with the tag being the task id
 };
 
 int main(int argc, char* argv[]) {
@@ -54,8 +49,7 @@ int main(int argc, char* argv[]) {
         
         Board board(config.width, config.height);
         Comp comp(config.depth, config.solo_depth);
-        spots.reserve(config.width * config.height);
-        heights.reserve(config.width);
+        
         std::size_t col;
         MoveResult move_result;
     
@@ -97,22 +91,24 @@ int main(int argc, char* argv[]) {
 
         // Free the workers
         for (int i = 0 ; i < world_size ; i++) {
-            MPI_Send(nullptr, 0, MPI_BYTE, i, Tags::FINISH, MPI_COMM_WORLD);
+            MPI_Send(nullptr, 0, MPI_BYTE, i, -1, MPI_COMM_WORLD);
         }
     } else {
-        MPI_Recv(&config, sizeof(config), MPI_BYTE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&config, sizeof(config), MPI_BYTE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE); // Get config
 
         Board board(config.width, config.height);
         Comp comp(config.depth);
         spots.reserve(config.width * config.height);
         heights.reserve(config.width);
+
+        MPI_Send(nullptr, 0, MPI_BYTE, 0, -1, MPI_COMM_WORLD); // Ask for the first task
         while (true) {
-            MPI_Send(nullptr, 0, MPI_BYTE, 0, Tags::ASK, MPI_COMM_WORLD); // Ask for a task
-            MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Wait for the task
-            if (status.MPI_TAG == Tags::FINISH) { // No more tasks
-                MPI_Recv(nullptr, 0, MPI_BYTE, 0, Tags::FINISH, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Wait for a task
+            if (status.MPI_TAG == -1) { // No more tasks
+                MPI_Recv(nullptr, 0, MPI_BYTE, 0, -1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 break;
             }
+            
             // Obtain task resources:
             MPI_Recv(spots.data(), config.width * config.height, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             int task_id = status.MPI_TAG;
