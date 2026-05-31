@@ -1,0 +1,36 @@
+int is_prime(int x) {
+    if (x < 2) {
+        return 0;
+    }
+
+    if (x == 2) {
+        return 1;
+    }
+
+    if ((x % 2) == 0) {
+        return 0;
+    }
+
+    for (int i = 3 ; i <= x / i ; i += 2) {
+        if ((x % i) == 0) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+__kernel void count_primes(
+    __global const int *inputs,
+    const unsigned int inputs_size,
+    __global unsigned int *count
+) {
+    size_t g_id = get_global_id(0);
+    size_t g_size = get_global_size(0);
+
+    for (size_t i = g_id ; i < inputs_size ; i += g_size) {
+        if (is_prime(inputs[i])) {
+            atomic_inc(count);
+        }
+    }
+}
