@@ -29,13 +29,9 @@ __kernel void count_primes(
     size_t g_id = get_global_id(0);
     size_t g_size = get_global_size(0);
 
-    unsigned int found = 0;
-
     for (size_t i = g_id ; i < size_inputs ; i += g_size) {
         if (is_prime(inputs[i])) {
-            found++;
+            (*count)++;
         }
     }
-
-    (*count) += found;
 }
