@@ -1,7 +1,9 @@
 /*
-gcc count_primes_seq.c -o build/count_primes_seq -lm
+gcc count_primes_seq.c -o build/count_primes_seq -lm -O3
 ./build/count_primes_seq <k> <rand/seq> [seed]
 */
+
+#define _POSIX_C_SOURCE 200809L // CLOCK_MONOTONIC
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +11,13 @@ gcc count_primes_seq.c -o build/count_primes_seq -lm
 #include <time.h>
 #include <string.h>
 #include <math.h>
+#include <stdint.h>
+#include <inttypes.h>
+
+static int64_t timespec_diff_us(struct timespec start, struct timespec end) {
+    return (int64_t)(end.tv_sec - start.tv_sec) * 1000000LL
+        + (int64_t)(end.tv_nsec - start.tv_nsec) / 1000LL;
+}
 
 int is_prime(int x) {
     if (x < 2) {
@@ -62,8 +71,6 @@ int main(int argc, char *argv[]) {
         return 2;
     }
 
-    // skip return value/error 3
-
     int random_inputs;
     if (strcmp(argv[2], "rand") == 0) {
         random_inputs = 1;
@@ -103,6 +110,26 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    struct timespec time_begin, time_end;
+    clock_gettime(CLOCK_MONOTONIC, &time_begin);
+
     count = count_primes(inputs, size_input);
+
+    clock_gettime(CLOCK_MONOTONIC, &time_end);
+
+    FILE *file_output = fopen("measurements/count_primes_seq.txt", "a");
+    if (file_output == NULL) {
+        fprintf(stderr, "fopen returned NULL\n");
+        return 8;
+    }
+
+    fprintf(file_output, "%s %s %" PRId64 "\n",
+        argv[1], // k
+        argv[2], // rand/seq
+        timespec_diff_us(time_begin, time_end)
+    );
+
+    fclose(file_output);
+
     printf("Count: %u\n", count);
 }

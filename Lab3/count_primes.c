@@ -6,6 +6,7 @@ RUSTICL_ENABLE=radeonsi ./build/count_primes <k> <atomic: t/f> <rand/seq> [seed]
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS  // clCreateCommandQueue
 #define CL_USE_DEPRECATED_OPENCL_1_1_APIS  // clUnloadCompiler
 #define CL_TARGET_OPENCL_VERSION 300
+#define _POSIX_C_SOURCE 200809L // CLOCK_MONOTONIC
 
 #include <CL/cl.h>
 #include <errno.h>
@@ -14,9 +15,11 @@ RUSTICL_ENABLE=radeonsi ./build/count_primes <k> <atomic: t/f> <rand/seq> [seed]
 #include <stddef.h>
 #include <string.h>
 #include <time.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 // CONFIG
-#define NUM_BLOCKS 256
+#define NUM_BLOCKS 64
 #define SIZE_BLOCK 512
 // CONFIG
 
@@ -95,6 +98,19 @@ char* load_kernel(const char *filename, size_t *source_size) {
     return source;
 }
 
+// Measure how long OpenCL commands take
+double event_time_us(cl_event event) {
+    cl_ulong begin, end;
+    CL_CHECK(clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(begin), &begin, NULL));
+    CL_CHECK(clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(end), &end, NULL));
+    return (end - begin) * 1e-3;
+}
+
+static int64_t timespec_diff_us(struct timespec start, struct timespec end) {
+    return (int64_t)(end.tv_sec - start.tv_sec) * 1000000LL
+        + (int64_t)(end.tv_nsec - start.tv_nsec) / 1000LL;
+}
+
 int main(int argc, char *argv[]) {
     if (argc != 4 && argc != 5) {
         fprintf(stderr, "Usage: %s <k> <atomic: t/f> <rand/seq> [seed]\n", argv[0]);
@@ -156,6 +172,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    struct timespec time_begin, time_end;
+    clock_gettime(CLOCK_MONOTONIC, &time_begin);
+
     cl_int _err = CL_INVALID_VALUE;
 
     cl_platform_id platform;
@@ -207,10 +226,14 @@ int main(int argc, char *argv[]) {
     size_t global_work_size[1] = {NUM_BLOCKS * SIZE_BLOCK};
     size_t local_work_size[1] = {SIZE_BLOCK};
 
-    CL_CHECK(clEnqueueNDRangeKernel(queue, kernel, 1, NULL, global_work_size, local_work_size, 0, NULL, NULL));
+    cl_event event_kernel;
+    CL_CHECK(clEnqueueNDRangeKernel(queue, kernel, 1, NULL, global_work_size, local_work_size, 0, NULL, &event_kernel));
     
     CL_CHECK(clEnqueueReadBuffer(queue, output_buffer, CL_TRUE, 0, sizeof(unsigned int), &count, 0, NULL, NULL));
 
+    double time_kernel = event_time_us(event_kernel);
+
+    CL_CHECK(clReleaseEvent(event_kernel));
     CL_CHECK(clReleaseMemObject(inputs_buffer));
     CL_CHECK(clReleaseMemObject(output_buffer));
     CL_CHECK(clReleaseKernel(kernel));
@@ -218,6 +241,26 @@ int main(int argc, char *argv[]) {
     CL_CHECK(clReleaseProgram(program));
     CL_CHECK(clReleaseContext(context));
     CL_CHECK(clReleaseDevice(device));
+
+    clock_gettime(CLOCK_MONOTONIC, &time_end);
+
+    FILE *file_output = fopen("measurements/count_primes.txt", "a");
+    if (file_output == NULL) {
+        fprintf(stderr, "fopen returned NULL\n");
+        return 8;
+    }
+
+    fprintf(file_output, "%d %d %s %s %s %" PRId64 " %.0lf\n",
+        NUM_BLOCKS,
+        SIZE_BLOCK,
+        argv[1], // k
+        argv[2], // atomic?
+        argv[3], // rand/seq
+        timespec_diff_us(time_begin, time_end),
+        time_kernel
+    );
+
+    fclose(file_output);
 
     free(inputs);
     free(source);
