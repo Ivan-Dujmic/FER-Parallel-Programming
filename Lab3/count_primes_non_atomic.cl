@@ -11,7 +11,8 @@ int is_prime(int x) {
         return 0;
     }
 
-    for (int i = 3 ; i <= x / i ; i += 2) {
+    int limit = (int)sqrt((float)x) + 1;
+    for (int i = 3 ; i <= limit ; i += 2) {
         if ((x % i) == 0) {
             return 0;
         }

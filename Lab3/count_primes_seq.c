@@ -1,5 +1,5 @@
 /*
-gcc count_primes_seq.c -o build/count_primes_seq
+gcc count_primes_seq.c -o build/count_primes_seq -lm
 ./build/count_primes_seq <k> <rand/seq> [seed]
 */
 
@@ -8,6 +8,7 @@ gcc count_primes_seq.c -o build/count_primes_seq
 #include <stddef.h>
 #include <time.h>
 #include <string.h>
+#include <math.h>
 
 int is_prime(int x) {
     if (x < 2) {
@@ -22,7 +23,8 @@ int is_prime(int x) {
         return 0;
     }
 
-    for (int i = 3 ; i <= x / i ; i += 2) {
+    int limit = (int)sqrt((float)x) + 1;
+    for (int i = 3 ; i <= limit ; i += 2) {
         if ((x % i) == 0) {
             return 0;
         }

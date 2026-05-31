@@ -16,8 +16,8 @@ RUSTICL_ENABLE=radeonsi ./build/count_primes <k> <atomic: t/f> <rand/seq> [seed]
 #include <time.h>
 
 // CONFIG
-#define SIZE_BLOCK 32
-#define NUM_BLOCKS 16
+#define NUM_BLOCKS 256
+#define SIZE_BLOCK 512
 // CONFIG
 
 // Takes some cl expression that returns cl_int and prints it, along it's error, and aborts if it fails 
