@@ -22,15 +22,19 @@ int is_prime(int x) {
 
 __kernel void count_primes(
     __global const int *inputs,
-    const unsigned int inputs_size,
+    const unsigned int size_inputs,
     __global unsigned int *count
 ) {
     size_t g_id = get_global_id(0);
     size_t g_size = get_global_size(0);
 
-    for (size_t i = g_id ; i < inputs_size ; i += g_size) {
+    unsigned int found = 0;
+
+    for (size_t i = g_id ; i < size_inputs ; i += g_size) {
         if (is_prime(inputs[i])) {
-            (*count)++;
+            found++;
         }
     }
+
+    (*count) += found;
 }

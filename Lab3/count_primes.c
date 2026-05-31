@@ -1,9 +1,6 @@
-/* Compiling:
-... -lOpenCL
-*/
-
-/* Running:
-RUSTICL_ENABLE=radeonsi ...
+/*
+gcc count_primes.c -o build/count_primes -lOpenCL
+RUSTICL_ENABLE=radeonsi ./build/count_primes <k> <atomic: t/f> <rand/seq> [seed]
 */
 
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS  // clCreateCommandQueue
@@ -99,8 +96,8 @@ char* load_kernel(const char *filename, size_t *source_size) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 4) {
-        fprintf(stderr, "Usage: %s <k> <atomic: t/f> <rand/seq>\n", argv[0]);
+    if (argc != 4 && argc != 5) {
+        fprintf(stderr, "Usage: %s <k> <atomic: t/f> <rand/seq> [seed]\n", argv[0]);
         return 1;
     }
 
@@ -130,7 +127,14 @@ int main(int argc, char *argv[]) {
         return 4;
     }
 
-    srand(time(0));
+    unsigned int seed;
+    if (argc == 5) {
+        seed = atoi(argv[4]);
+    } else {
+        seed = time(0);
+    }
+
+    srand(seed);
 
     const unsigned int size_input = 1 << k;
 
