@@ -42,8 +42,6 @@ int is_prime(int x) {
     return 1;
 }
 
-#
-
 unsigned int count_primes(
     const int *inputs,
     const unsigned int size_inputs

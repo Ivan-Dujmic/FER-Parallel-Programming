@@ -19,7 +19,7 @@ RUSTICL_ENABLE=radeonsi ./build/approx_pi <k>
 #include <inttypes.h>
 
 // CONFIG
-#define NUM_BLOCKS 512
+#define NUM_BLOCKS 64
 #define SIZE_BLOCK 256
 // CONFIG
 
@@ -125,7 +125,9 @@ int main(int argc, char *argv[]) {
 
     const unsigned int num_elem = 1 << k;
 
-    float *outputs = (float*)malloc(NUM_BLOCKS);
+    const size_t num_subsums = NUM_BLOCKS * SIZE_BLOCK;
+
+    float *outputs = (float*)malloc(num_subsums * sizeof(float));
 
     struct timespec time_begin, time_end;
     clock_gettime(CLOCK_MONOTONIC, &time_begin);
@@ -162,9 +164,9 @@ int main(int argc, char *argv[]) {
 
     cl_command_queue queue = (cl_command_queue)CL_CHECK_ERR(clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &_err), "queue");
 
-    cl_mem outputs_buffer = (cl_mem)CL_CHECK_ERR(clCreateBuffer(context, CL_MEM_WRITE_ONLY, NUM_BLOCKS * sizeof(float), NULL, &_err), "outputs_buffer");
+    cl_mem outputs_buffer = (cl_mem)CL_CHECK_ERR(clCreateBuffer(context, CL_MEM_WRITE_ONLY, num_subsums * sizeof(float), NULL, &_err), "outputs_buffer");
 
-    cl_kernel kernel = (cl_kernel)CL_CHECK_ERR(clCreateKernel(program, "count_primes", &_err), "kernel");
+    cl_kernel kernel = (cl_kernel)CL_CHECK_ERR(clCreateKernel(program, "approx_pi", &_err), "kernel");
     
     CL_CHECK(clSetKernelArg(kernel, 0, sizeof(cl_mem), &outputs_buffer));
     CL_CHECK(clSetKernelArg(kernel, 1, sizeof(unsigned int), &num_elem));
@@ -174,7 +176,7 @@ int main(int argc, char *argv[]) {
 
     CL_CHECK(clEnqueueNDRangeKernel(queue, kernel, 1, NULL, global_work_size, local_work_size, 0, NULL, NULL));
     
-    CL_CHECK(clEnqueueReadBuffer(queue, outputs_buffer, CL_TRUE, 0, sizeof(float), outputs, 0, NULL, NULL));
+    CL_CHECK(clEnqueueReadBuffer(queue, outputs_buffer, CL_TRUE, 0, num_subsums * sizeof(float), outputs, 0, NULL, NULL));
 
     CL_CHECK(clReleaseMemObject(outputs_buffer));
     CL_CHECK(clReleaseKernel(kernel));
@@ -184,11 +186,10 @@ int main(int argc, char *argv[]) {
     CL_CHECK(clReleaseDevice(device));
 
     float approx = 0.0f;
-    for (size_t i = 0 ; i < NUM_BLOCKS ; i++) {
-        printf("elem %zu - %f\n", i, outputs[i]);
+    for (size_t i = 0 ; i < num_subsums ; i++) {
         approx += outputs[i];
     }
-    approx = (approx * 4.0f) / num_elem;
+    approx = approx * 4.0f / num_elem;
 
     clock_gettime(CLOCK_MONOTONIC, &time_end);
 
