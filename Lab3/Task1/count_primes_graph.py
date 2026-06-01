@@ -67,7 +67,6 @@ for k, group in df.groupby("k"):
     plt.ylabel("SIZE_BLOCK")
     plt.title(f"Speedup vs Sequential for k={k}")
 
-    # Mark neutral line conceptually through color scale:
     # speedup_factor = 1 means equal to sequential
     for _, row in group.iterrows():
         plt.text(
@@ -76,7 +75,7 @@ for k, group in df.groupby("k"):
             f"{row['speedup_factor']:.2f}x",
             ha="center",
             va="center",
-            fontsize=8,
+            fontsize=16,
         )
 
     plt.tight_layout()
