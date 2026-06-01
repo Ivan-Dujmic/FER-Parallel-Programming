@@ -19,8 +19,8 @@ RUSTICL_ENABLE=radeonsi ./build/cfd_cl <scale> <numiter>
 #include "cfdio.h"
 
 // CONFIG
-#define LOCAL_X 16
-#define LOCAL_Y 16
+#define LOCAL_X 8
+#define LOCAL_Y 8
 // CONFIG
 
 // Takes some cl expression that returns cl_int and prints it, along it's error, and aborts if it fails 
