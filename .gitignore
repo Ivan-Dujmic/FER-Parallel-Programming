@@ -1,5 +1,8 @@
 venv/
 .vscode/
-build/
 ignore/
 test.cpp
+
+**/build/**
+!**/build/
+!**/build/.gitkeep

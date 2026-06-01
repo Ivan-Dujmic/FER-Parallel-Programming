@@ -8,7 +8,7 @@ import os
 
 NUM_BLOCKS_VALUES = [32, 64, 128, 256, 512]
 SIZE_BLOCK_VALUES = [16, 32, 64, 128, 256]
-K = 21
+K = 31
 ITER = 5
 
 SOURCE_FILE = Path("approx_pi.c")

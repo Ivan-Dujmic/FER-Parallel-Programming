@@ -3,7 +3,7 @@
 import subprocess
 from pathlib import Path
 
-K = 21
+K = 31
 ITER = 5
 
 SOURCE_FILE = Path("approx_pi_seq.c")

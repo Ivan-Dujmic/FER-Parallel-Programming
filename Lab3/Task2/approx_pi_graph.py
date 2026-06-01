@@ -76,6 +76,9 @@ guvec = guvec.groupby(["k", "block_size"], as_index=False)["time_guvec"].mean()
 df_guvec = guvec.merge(seq, on="k", how="inner")
 df_guvec["speedup_factor"] = df_guvec["time_seq"] / df_guvec["time_guvec"]
 
+df_guvec_vec = guvec.merge(vec[["k", "time_vec"]], on="k", how="inner")
+df_guvec_vec["speedup_factor_vec"] = df_guvec_vec["time_vec"] / df_guvec_vec["time_guvec"]
+
 for k, group in df_par.groupby("k"):
     plt.figure(figsize=(10, 6))
 
@@ -125,6 +128,20 @@ for k, group in df_guvec.groupby("k"):
     plt.tight_layout()
 
     output_path = out_dir / f"speedup_guvec_k_{k}.png"
+    plt.savefig(output_path, dpi=200)
+    plt.close()
+
+for k, group in df_guvec_vec.groupby("k"):
+    plt.figure(figsize=(10, 6))
+    plt.plot(group["block_size"], group["speedup_factor_vec"], marker="o")
+    plt.xscale("log", base=2)
+    plt.xlabel("Block Size")
+    plt.ylabel("Speedup Factor (UG Vectorized vs Vectorized)")
+    plt.title(f"Numba UG Vectorized vs Vectorized for k={k}")
+    plt.grid(True, which="both", ls="--", lw=0.5)
+    plt.tight_layout()
+
+    output_path = out_dir / f"speedup_guvec_vs_vec_k_{k}.png"
     plt.savefig(output_path, dpi=200)
     plt.close()
 
