@@ -26,7 +26,7 @@ float approx_pi(const unsigned int num_elems) {
     float nnp = nn + 0.25f;
 
     for (size_t i = 0 ; i < num_elems ; i++) {
-        sum += (nn / (nnp + i * i - i));
+        sum += (nn / (nnp + (float)i * i - i));
     }
 
     return sum;

@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
     free(outputs);
     free(source);
 
-    printf("Approx: %f\n", approx);
+    printf("Approx: %.12f\n", approx);
 
     return 0;    
 }
