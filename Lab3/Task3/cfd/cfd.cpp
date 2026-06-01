@@ -1,3 +1,8 @@
+/*
+gcc cfd/*.cpp -o build/cfd -lm -O3
+./build/cfd <scale> <numiter>
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -11,13 +16,13 @@
 int main(int argc, char **argv)
 {
 	int printfreq=1000; //output frequency
-	double error, bnorm;
-	double tolerance=0.0; //tolerance for convergence. <=0 means do not check
+	float error, bnorm;
+	float tolerance=0.0; //tolerance for convergence. <=0 means do not check
 
 	//main arrays
-	double *psi;
+	float *psi;
 	//temporary versions of main arrays
-	double *psitmp;
+	float *psitmp;
 
 	//command line arguments
 	int scalefactor, numiter;
@@ -69,8 +74,8 @@ int main(int argc, char **argv)
 	printf("Running CFD on %d x %d grid in serial\n",m,n);
 
 	//allocate arrays
-	psi    = (double *) malloc((m+2)*(n+2)*sizeof(double));
-	psitmp = (double *) malloc((m+2)*(n+2)*sizeof(double));
+	psi    = (float *) malloc((m+2)*(n+2)*sizeof(float));
+	psitmp = (float *) malloc((m+2)*(n+2)*sizeof(float));
 
 	//zero the psi array
 	for (i=0;i<m+2;i++) {
@@ -100,37 +105,18 @@ int main(int argc, char **argv)
 
 		//calculate psi for next iteration
 		jacobistep(psitmp,psi,m,n);
-	
-		//calculate current error if required
-		if (checkerr || iter == numiter) {
-			error = deltasq(psitmp,psi,m,n);
 
+		
+		if (iter == numiter) {
+			error = deltasq(psitmp,psi,m,n);
 			error=sqrt(error);
 			error=error/bnorm;
-		}
-
-		//quit early if we have reached required tolerance
-		if (checkerr) {
-			if (error < tolerance) {
-				printf("Converged on iteration %d\n",iter);
-				break;
-			}
 		}
 
 		//copy back
 		for(i=1;i<=m;i++) {
 			for(j=1;j<=n;j++) {
 				psi[i*(m+2)+j]=psitmp[i*(m+2)+j];
-			}
-		}
-
-		//print loop information
-		if(iter%printfreq == 0) {
-			if (!checkerr) {
-				printf("Completed iteration %d\n",iter);
-			}
-			else {
-				printf("Completed iteration %d, error = %g\n",iter,error);
 			}
 		}
 	}	// iter

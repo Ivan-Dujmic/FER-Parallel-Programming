@@ -1,5 +1,5 @@
 //#include <nvtx3/nvToolsExt.h>
 
-void jacobistep(double *psinew, double *psi, int m, int n);
+void jacobistep(float *psinew, float *psi, int m, int n);
 
-double deltasq(double *newarr, double *oldarr, int m, int n);
+float deltasq(float *newarr, float *oldarr, int m, int n);
