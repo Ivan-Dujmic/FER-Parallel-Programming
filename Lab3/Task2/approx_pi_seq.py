@@ -3,11 +3,12 @@
 import subprocess
 from pathlib import Path
 
-K_VALUES = [20, 22, 24]
+K = 21
+ITER = 5
 
-SOURCE_FILE = Path("count_primes_seq.c")
+SOURCE_FILE = Path("approx_pi_seq.c")
 BUILD_DIR = Path("build")
-EXECUTABLE = BUILD_DIR / "count_primes_seq"
+EXECUTABLE = BUILD_DIR / "approx_pi_seq"
 
 
 def build() -> None:
@@ -26,11 +27,10 @@ def build() -> None:
     )
 
 
-def run_program(k: int) -> None:
+def run_program() -> None:
     cmd = [
         str(EXECUTABLE),
-        str(k),
-        "seq",
+        str(K),
     ]
 
     subprocess.run(
@@ -42,8 +42,8 @@ def run_program(k: int) -> None:
 def main() -> None:
     build()
 
-    for k in K_VALUES:
-        run_program(k)
+    for _ in range(ITER):
+        run_program()
 
 if __name__ == "__main__":
     main()

@@ -19,7 +19,7 @@ RUSTICL_ENABLE=radeonsi ./build/approx_pi <k>
 #include <inttypes.h>
 
 // CONFIG
-#define NUM_BLOCKS 64
+#define NUM_BLOCKS 512
 #define SIZE_BLOCK 256
 // CONFIG
 
