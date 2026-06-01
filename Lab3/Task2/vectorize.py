@@ -3,7 +3,7 @@ from numba import vectorize, float64
 import sys
 import time
 
-@vectorize([float64(float64, float64)], target='parallel', nopython=True)
+@vectorize([float64(float64, float64)], target='cuda', nopython=True)
 def approx_pi(i, num_elem):
     nn = num_elem * num_elem
     return nn / (nn + i * i - i + 0.25)

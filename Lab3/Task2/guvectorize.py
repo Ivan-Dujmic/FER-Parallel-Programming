@@ -3,11 +3,11 @@ from numba import guvectorize, float64
 import sys
 import time
 
-@guvectorize([(float64[:], float64, float64[:])], '(n),()->()', target='parallel', nopython=True)
+@guvectorize([(float64[:], float64, float64[:])], '(n),()->()', target='cuda', nopython=True)
 def approx_pi(block, num_elem, res):
     sum = 0.0
     nn = num_elem * num_elem
-    
+
     for i in range(block.shape[0]):
         x = block[i]
         sum += nn / (nn + x * x - x + 0.25)
