@@ -3,7 +3,7 @@ from numba import vectorize, float64
 import sys
 import time
 
-@vectorize([float64(float64, float64)], target='parallel')
+@vectorize([float64(float64, float64)], target='parallel', nopython=True)
 def approx_pi(i, num_elem):
     nn = num_elem * num_elem
     return nn / (nn + i * i - i + 0.25)
@@ -19,7 +19,7 @@ if __name__=="__main__":
 
     time_start = time.perf_counter_ns()
 
-    pi_approx = np.sum(approx_pi(np.arange(num_elem), num_elem)) * 4 / num_elem
+    pi_approx = np.sum(approx_pi(np.arange(num_elem, dtype=np.float64), num_elem)) * 4.0 / num_elem
 
     time_end = time.perf_counter_ns()
 
