@@ -22,13 +22,20 @@ that will allow each process to determine the index of its immediate predecessor
 #include <random>
 #include <algorithm>
 #include <vector>
+#include <climits>
 
-/*
-This hypercube solution works when the number of processes is a power of 2.
+int bit_floor(int x) {
+    if (x <= 0) return 0;
 
-Only the processes with ranks that are submasks of world_size-1 have full info
-    Submask here means that ranks don't have set bits where world_size-1 has doesn't have set bits
-*/
+    unsigned ux = static_cast<unsigned>(x);
+    int bits = sizeof(unsigned) * CHAR_BIT;
+
+    return static_cast<int>(1u << (bits - 1 - __builtin_clz(ux)));
+}
+
+bool is_submask(int x, int y) {
+    return (x & ~y) == 0;
+}
 
 int main()  {
     MPI_Init(nullptr, nullptr);
@@ -93,7 +100,30 @@ int main()  {
         }
     }
 
-    // TODO: imperfect hypercube
+    /*
+    Only the processes with ranks that are submasks of world_size-1 have full info
+        Submask here means that ranks don't have set bits where world_size-1 doesn't have set bits
+    */
+   if (world_size - bit_floor(world_size) != 0) { // If imperfect cube
+        if (!is_submask(rank, world_size - 1)) { // I don't have full info
+            MPI_Recv(other_tickets.data(), world_size, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, nullptr);
+                for (int i = 0 ; i < world_size ; i++) { // Update with new info
+                    if (tickets[i] != -1) continue; // I already know that
+                    tickets[i] = other_tickets[i];
+                }
+        }
+
+        for (int mask = 1 ; mask < world_size ; mask <<= 1) {
+            int partner = rank ^ mask;
+            if (partner >= world_size) break;
+            
+            if (partner < rank || // Someone else will send them the full info (0 always has full info)
+                is_submask(partner, world_size - 1) // They already have full info
+            ) continue;
+
+            MPI_Send(tickets.data(), world_size, MPI_INT, partner, 0, MPI_COMM_WORLD);
+        }
+   }
 
     std::ostringstream msg;
     msg << rank << " knows:";
