@@ -12,7 +12,7 @@ Implement a kernel in which each thread
 transposes one matrix block of size c × c, where c = 2^l and N % c == 0.
 */
 
-__kernel void (__global const float* src, __global float* dst, const int N, const int C) {
+__kernel void foo(__global const float* src, __global float* dst, const int N, const int C) {
     int block_col = get_global_id(0);
     int block_row = get_global_id(1);
 

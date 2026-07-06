@@ -16,7 +16,7 @@ and are chosen such that the workload is distributed evenly among the threads
 (without the need for additional boundary checks).
 */
 
-__kernel void (__global const float* src, __global float* dst, const int N) {
+__kernel void foo(__global const float* src, __global float* dst, const int N) {
     int start_col = get_global_id(0);
     int start_row = get_global_id(1);
 
